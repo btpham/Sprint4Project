@@ -49,6 +49,7 @@ data.info()
 data['cylinders'] = data['cylinders'].fillna(data['cylinders'].median())
 data['odometer'] = data['odometer'].fillna(data['odometer'].mean())
 data['is_4wd'] = data['is_4wd'].fillna(data['is_4wd'].median()).astype(int)
+data['model_year'] = data['model_year'].fillna(data['model_year'].median())
 data['paint_color'] = data['paint_color'].fillna('unknown')
 
 
