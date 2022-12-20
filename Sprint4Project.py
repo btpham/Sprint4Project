@@ -50,34 +50,33 @@ data.info()
 
 data['cylinders'] = data['cylinders'].fillna(data['cylinders'].median())
 data['odometer'] = data['odometer'].fillna(data['odometer'].mean())
-data['is_4wd'] = data['is_4wd'].fillna(data['is_4wd'].a.bool())
-data['model_year'] = data['model_year'].fillna(data['model_year'].median())
+data['is_4wd'] = data['is_4wd'].fillna(0)
+data['is_4wd'] = data['is_4wd'].astype(bool)
+grouped_by_model = data.groupby('model').agg({'model_year': 'median', 'cylinders':'median'})
 data['paint_color'] = data['paint_color'].fillna('unknown')
 
 
-# <b> There was a reviewer comment to adjust model_year, but I don't really use it in my graphs, so I decided not to modify it. </b>
-
-# In[ ]:
+# In[4]:
 
 
 # Format Change: convert date_posted to date_time
 data['date_posted'] = pd.to_datetime(data['date_posted'], format = '%Y-%m-%d')
 
 
-# In[ ]:
+# In[5]:
 
 
 # Remove Duplicates:
 data = data.drop_duplicates(subset = None, keep = 'first')
 
 
-# In[ ]:
+# In[6]:
 
 
 data.info()
 
 
-# In[ ]:
+# In[7]:
 
 
 # creating title for page
@@ -85,7 +84,7 @@ data.info()
 st.header("Pricing Analysis")
 
 
-# In[ ]:
+# In[8]:
 
 
 # create options for histogram elements by creating selectbox
@@ -101,7 +100,7 @@ title = '<b>Price Analysis -- {}</b>'.format(choice_for_hist))
 st.plotly_chart(fig1)
 
 
-# In[ ]:
+# In[9]:
 
 
 # create distribution for scatterplot
@@ -113,16 +112,4 @@ fig2 = px.scatter(data,x = choice_for_scatter, y = 'price')
 fig2.update_layout(
 title = '<b>Price based on {}</b>'.format(choice_for_scatter))
 st.plotly_chart(fig2)
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
 
