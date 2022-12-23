@@ -41,66 +41,130 @@ data.info()
 # 3. Convert missing 'is_4wd' (either 0 - no, or 1 - yes) to median non-missing is_4wd values
 # 4. Convert missing paint_color to 'unknown' string
 
-# # Having some issues with converting missing values in 'is_4wd' to boolean - see errors below
-
 # In[3]:
 
 
-# Missing Values: convert model_year, cylinders, odometer, and is_4wd to more suitable values
+# Fill in missing values: 'model_year' and 'cylinders'
+grouped_by_model = data.groupby('model').agg({'model_year': 'median', 'cylinders': 'median'})
+for model in data['model'].unique():
+    data.loc[(data['model'] == model) & (data['model_year'].isna()), 'model_year'] =         grouped_by_model.loc[grouped_by_model.index == model, 'model_year'][0]
+    data.loc[(data['model'] == model) & (data['cylinders'].isna()), 'cylinders'] =         grouped_by_model.loc[grouped_by_model.index == model, 'cylinders'][0]
 
-data['cylinders'] = data['cylinders'].fillna(data['cylinders'].median())
-data['odometer'] = data['odometer'].fillna(data['odometer'].mean())
-data['is_4wd'] = data['is_4wd'].fillna(0)
-data['is_4wd'] = data['is_4wd'].astype(bool)
-grouped_by_model = data.groupby('model').agg({'model_year': 'median', 'cylinders':'median'})
-data['paint_color'] = data['paint_color'].fillna('unknown')
+data.isna().sum()
+data.info()
 
 
 # In[4]:
+
+
+# Fill in missing values: 'cylinder' to median of cylinder by model year
+data['cylinders'] = data['cylinders'].fillna(data.groupby('model').agg({'cylinders':'median'}).to_dict)
+
+# Check that cylinders show 0 missing values
+data.isna().sum()
+
+
+# In[5]:
+
+
+# Missing Values 'is_4wd'
+data['is_4wd'] = data['is_4wd'].fillna(0)
+data['is_4wd'] = data['is_4wd'].astype(bool)
+
+# Check that is_4wd shows 0 missing values
+data.isna().sum()
+
+
+# In[6]:
+
+
+# Missing Values: paint_color to 'unknown'
+data['paint_color'] = data['paint_color'].fillna('unknown')
+
+
+# In[7]:
+
+
+# Missing Values: convert odometer to mean by model_year and paint color to 'unknown'
+grouped_by_condition = data.groupby('condition').agg({'odometer': 'mean'})
+for condition in data['condition'].unique():
+    data.loc[(data['condition'] == condition) & (data['odometer'].isna()), 'odometer'] =         grouped_by_condition.loc[grouped_by_condition.index == condition, 'odometer'][0]
+    
+# Check that odometer shows 0 missing values
+data.isna().sum()
+
+
+# In[8]:
 
 
 # Format Change: convert date_posted to date_time
 data['date_posted'] = pd.to_datetime(data['date_posted'], format = '%Y-%m-%d')
 
 
-# In[5]:
+# In[9]:
 
 
 # Remove Duplicates:
 data = data.drop_duplicates(subset = None, keep = 'first')
 
 
-# In[6]:
+# In[10]:
 
 
 data.info()
 
 
-# In[7]:
+# In[11]:
+
+
+data['odometer'] = pd.to_numeric(data['odometer'])
+
+
+# In[12]:
 
 
 # creating title for page
 
-st.header("Pricing Analysis")
+st.header("Model Comparison and Pricing Analysis")
 
 
-# In[8]:
+# In[13]:
 
 
-# create options for histogram elements by creating selectbox
-list_for_hist = ['is_4wd','model','condition']
-choice_for_hist = st.selectbox('Choose Options', list_for_hist)
-
-# create histogram using plotly-express
-fig1 = px.histogram(data, x ="price", color = choice_for_hist)
+# create histogram using plotly-express to compare 2 models for is_4wd
+fig1 = px.histogram(data, x = 'is_4wd', color='model')
 fig1.update_layout(
-title = '<b>Price Analysis -- {}</b>'.format(choice_for_hist))
+title = '<b>Count -- {}</b>'.format('Has 4 Wheel Drive'))
 
 # embedding into streamlit
 st.plotly_chart(fig1)
 
 
-# In[9]:
+# In[14]:
+
+
+# create histogram using plotly-express to compare 2 models for color
+fig2 = px.histogram(data, x = 'paint_color', color='model')
+fig2.update_layout(
+title = '<b>Count -- {}</b>'.format('Paint Color'))
+
+# embedding into streamlit
+st.plotly_chart(fig2)
+
+
+# In[15]:
+
+
+# create histogram using plotly-express to compare 2 models for condition
+fig3 = px.histogram(data, x = 'condition', color='model')
+fig3.update_layout(
+title = '<b>Count -- {}</b>'.format('Condition'))
+
+# embedding into streamlit
+st.plotly_chart(fig3)
+
+
+# In[16]:
 
 
 # create distribution for scatterplot
@@ -108,8 +172,8 @@ list_for_scatter = ['model', 'condition', 'odometer']
 choice_for_scatter = st.selectbox('Choose Factors: ',list_for_scatter)
 
 # create scatterplot using plotly-express
-fig2 = px.scatter(data,x = choice_for_scatter, y = 'price')
-fig2.update_layout(
+fig4 = px.scatter(data,x = choice_for_scatter, y = 'price')
+fig4.update_layout(
 title = '<b>Price based on {}</b>'.format(choice_for_scatter))
-st.plotly_chart(fig2)
+st.plotly_chart(fig4)
 
